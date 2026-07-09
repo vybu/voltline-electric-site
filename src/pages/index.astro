@@ -150,7 +150,7 @@ const serviceImages: Record<string, string> = {
                     <span class="svc-card__dur">{formatDuration(s.durationMinutes)}</span>
                   </span>
                 </div>
-                <a class="svc-card__link" href={`/services/${s.slug}`} aria-label={`Book ${s.name}`}></a>
+                <a class="svc-card__link" href={`/services/${s.slug}`} aria-label={`Book ${s.name}`} data-astro-prefetch="viewport"></a>
               </article>
             );
           })}

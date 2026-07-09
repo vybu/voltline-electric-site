@@ -38,6 +38,12 @@ try {
 
 if (!service) return new Response(null, { status: 404 });
 
+// Let the browser cache the rendered page briefly so the prefetched HTML (from
+// the home-page service cards) is reused on click — turning the ~2s SSR wait
+// into an instant navigation. "private" keeps it out of shared/CDN caches;
+// live availability is fetched client-side by the widget, so this is safe.
+Astro.response.headers.set("Cache-Control", "private, max-age=120");
+
 const priceLabel = formatPrice(service);
 const durationLabel = formatDuration(service.durationMinutes);
 
