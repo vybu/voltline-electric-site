@@ -1,0 +1,97 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import RicosContent from "../../components/RicosContent.tsx";
+import { SEO } from "@wix/seo/components";
+import { loadSEOTagsServiceConfig } from "@wix/seo/services";
+import { seoTags } from "@wix/seo";
+import { WIX_APPS } from "@wix/essentials";
+import { getPostBySlug, formatPostDate } from "../../lib/blog.ts";
+
+// Register this item route so Wix owns its SEO tags + sitemap entry.
+export const wixMetadata = {
+  appDefId: WIX_APPS.blogs.id,
+  pageIdentifier: WIX_APPS.blogs.postPageMetadata.pageIdentifier,
+  identifiers: {
+    slug: WIX_APPS.blogs.postPageMetadata.identifiers.slug,
+  },
+};
+
+const slug = Astro.params.slug!;
+
+// Guard the SSR read (A3). Run the post fetch + SEO config in parallel.
+let post = null;
+let seoTagsServiceConfig = null;
+try {
+  [post, seoTagsServiceConfig] = await Promise.all([
+    getPostBySlug(slug),
+    loadSEOTagsServiceConfig({
+      pageUrl: Astro.url.href,
+      itemType: seoTags.ItemType.BLOG_POST,
+      itemData: { slug },
+    }).catch(() => null),
+  ]);
+} catch (e) {
+  console.error("post detail load failed", e);
+}
+
+if (!post) return new Response(null, { status: 404 });
+
+const dateLabel = formatPostDate(post.firstPublishedDate);
+const readLabel = post.minutesToRead ? `${post.minutesToRead} min read` : null;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.title,
+  description: post.excerpt,
+  datePublished: post.firstPublishedDate,
+  author: { "@type": "Person", name: "Lukas — Electrician" },
+};
+---
+
+<Layout>
+  {seoTagsServiceConfig && (
+    <SEO.Tags seoTagsServiceConfig={seoTagsServiceConfig} slot="seo-tags" />
+  )}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+  <SiteHeader />
+
+  <article class="post">
+    <div class="wrap wrap--reading">
+      <div class="detail__back">
+        <a class="arrow-link" href="/journal"><span class="arrow">←</span> All field notes</a>
+      </div>
+
+      <header class="post__head">
+        <p class="eyebrow eyebrow--accent">
+          {post.categoryLabels.length ? post.categoryLabels.join(" · ") : "Field Note"}
+        </p>
+        <h1 class="display post__title">{post.title}</h1>
+        {post.excerpt && <p class="post__lede">{post.excerpt}</p>}
+        <div class="post__meta">
+          {dateLabel && <span>{dateLabel}</span>}
+          {readLabel && <span>{readLabel}</span>}
+        </div>
+      </header>
+
+      {post.coverUrl && (
+        <div class="post__cover">
+          <img src={post.coverUrl} alt="" decoding="async" />
+        </div>
+      )}
+
+      <div class="post__body">
+        <RicosContent client:only="react" content={post.richContent} />
+      </div>
+
+      <div class="post__foot">
+        <a class="btn" href="/#services">Book a visit <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </article>
+
+  <SiteFooter />
+</Layout>

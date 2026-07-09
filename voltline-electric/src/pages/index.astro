@@ -1,0 +1,202 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import ServiceIcon from "../components/ServiceIcon.astro";
+import {
+  listServices,
+  formatPrice,
+  formatDuration,
+  type ServiceView,
+} from "../lib/wix.ts";
+import { listPosts, formatPostDate, type PostView } from "../lib/blog.ts";
+
+// Guard the SSR reads (A3): an unguarded throw would truncate the response.
+let services: ServiceView[] = [];
+let posts: PostView[] = [];
+try {
+  [services, posts] = await Promise.all([
+    listServices(),
+    listPosts(4).catch((e) => {
+      console.error("Failed to load journal posts", e);
+      return [];
+    }),
+  ]);
+} catch (e) {
+  console.error("Failed to load services", e);
+}
+
+const pad = (n: number) => String(n + 1).padStart(2, "0");
+
+const serviceImages: Record<string, string> = {
+  "lighting-design-fit": "/services/lighting-design-fit.webp",
+  "consumer-unit-upgrade": "/services/consumer-unit-upgrade.webp",
+  "rewire-consultation": "/services/rewire-consultation.webp",
+  "emergency-callout": "/services/emergency-callout.webp",
+  "eicr-safety-inspection": "/services/eicr-safety-inspection.webp",
+  "ev-charger-installation": "/services/ev-charger-installation.webp",
+};
+
+// Editorial "Field Notes" are live Wix Blog posts (see src/lib/blog.ts).
+---
+
+<Layout>
+  <!-- HERO — full-bleed image of Lukas with his kit, on warm terracotta. -->
+  <section class="hero" id="top">
+    <div class="hero__bg">
+      <picture>
+        <!-- Mobile: portrait crop framed on the character (landscape source
+             would upscale ~4x on tall phone screens and look soft). -->
+        <source
+          media="(max-width: 640px)"
+          type="image/webp"
+          sizes="100vw"
+          srcset="
+            /hero1-portrait-560.webp 560w,
+            /hero1-portrait-720.webp 720w,
+            /hero1-portrait-960.webp 960w
+          "
+        />
+        <source
+          media="(max-width: 640px)"
+          type="image/jpeg"
+          sizes="100vw"
+          srcset="
+            /hero1-portrait-560.jpg 560w,
+            /hero1-portrait-720.jpg 720w,
+            /hero1-portrait-960.jpg 960w
+          "
+        />
+        <source
+          type="image/webp"
+          sizes="100vw"
+          srcset="
+            /hero1-768.webp 768w,
+            /hero1-1200.webp 1200w,
+            /hero1-1600.webp 1600w,
+            /hero1-2000.webp 2000w,
+            /hero1-2752.webp 2752w
+          "
+        />
+        <img
+          src="/hero1-1600.jpg"
+          sizes="100vw"
+          srcset="
+            /hero1-768.jpg 768w,
+            /hero1-1200.jpg 1200w,
+            /hero1-1600.jpg 1600w,
+            /hero1-2000.jpg 2000w,
+            /hero1-2752.jpg 2752w
+          "
+          alt="Lukas, electrician, with his tools and equipment"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </picture>
+    </div>
+    <div class="hero__scrim" aria-hidden="true"></div>
+
+    <SiteHeader overlay />
+
+    <div class="hero__content">
+      <h1 class="hero__title">
+        An electrician homes<br />can actually count on<span class="dot">.</span>
+      </h1>
+      <a class="btn" href="#services">Book a visit <span class="arrow">→</span></a>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="services">
+    <div class="wrap">
+      <div class="band-head">
+        <p class="eyebrow">Service Index</p>
+        <p class="eyebrow mid">What Lukas does</p>
+        <p class="eyebrow end">Fully insured · Since 2016</p>
+      </div>
+    </div>
+    <div class="wrap">
+      {services.length === 0 ? (
+        <p class="bw__empty">Services are loading — check back in a moment.</p>
+      ) : (
+        <div class="svc-grid">
+          {services.map((s, i) => {
+            const serviceImage = serviceImages[s.slug] ?? s.imageUrl;
+
+            return (
+              <article class="svc-card">
+                <div class="svc-card__top">
+                  <span class="svc-card__idx">{pad(i)}</span>
+                  <span class="svc-card__type">{s.isFree ? "Free consult" : s.type === "CLASS" ? "Class" : "Home visit"}</span>
+                </div>
+                <div class="svc-card__visual">
+                  {serviceImage ? (
+                    <img
+                      src={serviceImage}
+                      alt={s.name}
+                      loading={i < 3 ? "eager" : "lazy"}
+                      decoding="async"
+                      sizes="(max-width: 560px) calc(100vw - 44px), (max-width: 900px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <ServiceIcon slug={s.slug} />
+                  )}
+                  <span class="svc-card__tag">{s.tagLine}</span>
+                </div>
+                <div class="svc-card__foot">
+                  <span class="svc-card__name">{s.name}</span>
+                  <span class="svc-card__meta">
+                    <span class="svc-card__price">{formatPrice(s)}</span><br />
+                    <span class="svc-card__dur">{formatDuration(s.durationMinutes)}</span>
+                  </span>
+                </div>
+                <a class="svc-card__link" href={`/services/${s.slug}`} aria-label={`Book ${s.name}`}></a>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- STATEMENT -->
+  <section class="statement" id="about">
+    <div class="wrap">
+      <h2>I make power<br />problems disappear<span class="dot">.</span></h2>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- FIELD NOTES / JOURNAL -->
+  {posts.length > 0 && (
+    <section class="notes" id="journal">
+      <div class="wrap">
+        <div class="band-head">
+          <p class="eyebrow">Field Notes Index</p>
+          <p class="eyebrow mid">Journal</p>
+          <a class="eyebrow end arrow-link" href="/journal">All notes <span class="arrow">→</span></a>
+        </div>
+        <div class="notes-row">
+          {posts.map((n, i) => (
+            <a class="note" href={`/journal/${n.slug}`}>
+              <div class="note__thumb">
+                {n.coverUrl && (
+                  <img src={n.coverUrl} alt="" loading="lazy" decoding="async" />
+                )}
+                {n.categoryLabel && <span class="note__kicker">{n.categoryLabel}</span>}
+              </div>
+              <div class="note__title">{n.title}</div>
+              <div class="note__date">
+                {`Field Note No.${pad(posts.length - 1 - i)}`}
+                {n.firstPublishedDate ? ` · ${formatPostDate(n.firstPublishedDate)}` : ""}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <SiteFooter />
+</Layout>

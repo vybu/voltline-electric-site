@@ -1,0 +1,103 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { bookings } from "@wix/bookings";
+
+const params = Astro.url.searchParams;
+const bookingId = params.get("bookingId") ?? "";
+const token = params.get("token") ?? "";
+const placed = params.get("placed") === "1";
+const reserved = params.get("reserved") === "1";
+const confirmed = params.get("confirmed") === "1";
+const svc = params.get("svc") ?? "";
+const whenParam = params.get("when") ?? "";
+
+// Best-effort: read the booking back as the anonymous visitor to reflect real
+// status. This may be unavailable (token not minted), which is fine — a created
+// booking is already a held reservation.
+let bookingStatus: string | null = null;
+if (token) {
+  try {
+    const res = await bookings.bookingsGetBookingAnonymously(token);
+    bookingStatus = (res as any)?.booking?.status ?? null;
+  } catch (e) {
+    console.error("anonymous booking read failed", e);
+  }
+}
+
+// Success if we placed the order, reserved the slot, arrived with a real
+// bookingId (createBooking succeeded), or the read shows a live status.
+const goodStatus =
+  bookingStatus != null &&
+  ["CREATED", "CONFIRMED", "PENDING"].includes(bookingStatus);
+const isSuccess = placed || reserved || confirmed || goodStatus || !!bookingId;
+
+const start = whenParam ? new Date(whenParam) : null;
+const when =
+  start && !isNaN(start.getTime())
+    ? start.toLocaleString([], {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+const statusLabel =
+  bookingStatus === "CONFIRMED" || (confirmed && bookingStatus == null)
+    ? "Confirmed"
+    : bookingStatus === "PENDING"
+      ? "Pending confirmation"
+      : "Reserved — we'll call to confirm";
+---
+
+<Layout>
+  <SiteHeader />
+
+  <section class="confirm">
+    <div class="wrap">
+      <div class="confirm__inner">
+        {isSuccess ? (
+          <>
+            <p class="confirm__badge">Booking received</p>
+            <h1>You're on the board<span class="dot">.</span></h1>
+            <p>
+              Thanks — Lukas has your job reserved. He'll call to confirm the
+              details and your address. No payment is taken online; you settle on
+              completion.
+            </p>
+            {(svc || when) && (
+              <div class="confirm__card">
+                {svc && (
+                  <div class="row"><span class="k">Service</span><span class="v">{svc}</span></div>
+                )}
+                {when && (
+                  <div class="row"><span class="k">When</span><span class="v">{when}</span></div>
+                )}
+                <div class="row"><span class="k">Status</span><span class="v">{statusLabel}</span></div>
+              </div>
+            )}
+            <a class="btn" href="/">Back to home <span class="arrow">→</span></a>
+          </>
+        ) : (
+          <>
+            <p class="confirm__badge">Not confirmed</p>
+            <h1>Let's finish this<span class="dot">.</span></h1>
+            <p>
+              We couldn't confirm a completed booking. If you didn't finish, pick
+              a time again — or call us and we'll book it for you.
+            </p>
+            <div style="margin-top:28px; display:flex; gap:14px; flex-wrap:wrap;">
+              <a class="btn" href="/#services">Choose a time <span class="arrow">→</span></a>
+              <a class="btn btn--ghost" href="tel:+17712246700">Call +1 771 224 6700</a>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <SiteFooter />
+</Layout>

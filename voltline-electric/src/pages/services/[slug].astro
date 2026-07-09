@@ -1,0 +1,108 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import BookingWidget from "../../components/BookingWidget.tsx";
+import { SEO } from "@wix/seo/components";
+import { loadSEOTagsServiceConfig } from "@wix/seo/services";
+import { seoTags } from "@wix/seo";
+import { WIX_APPS } from "@wix/essentials";
+import { getServiceBySlug, formatPrice, formatDuration } from "../../lib/wix.ts";
+
+// Register this item route so Wix owns its SEO tags + sitemap entry.
+export const wixMetadata = {
+  appDefId: WIX_APPS.bookings.id,
+  pageIdentifier: WIX_APPS.bookings.servicePageMetadata.pageIdentifier,
+  identifiers: {
+    slug: WIX_APPS.bookings.servicePageMetadata.identifiers.slug,
+  },
+};
+
+const slug = Astro.params.slug!;
+
+// Guard the SSR read (A3). Run the item fetch + SEO config in parallel.
+let service = null;
+let seoTagsServiceConfig = null;
+try {
+  [service, seoTagsServiceConfig] = await Promise.all([
+    getServiceBySlug(slug),
+    loadSEOTagsServiceConfig({
+      pageUrl: Astro.url.href,
+      itemType: seoTags.ItemType.BOOKINGS_SERVICE,
+      itemData: { slug },
+    }).catch(() => null),
+  ]);
+} catch (e) {
+  console.error("service detail load failed", e);
+}
+
+if (!service) return new Response(null, { status: 404 });
+
+const priceLabel = formatPrice(service);
+const durationLabel = formatDuration(service.durationMinutes);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: service.name,
+  description: service.description,
+  provider: { "@type": "Electrician", name: "Lukas — Electrician" },
+  areaServed: "Citywide",
+};
+---
+
+<Layout>
+  {seoTagsServiceConfig && (
+    <SEO.Tags seoTagsServiceConfig={seoTagsServiceConfig} slot="seo-tags" />
+  )}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+  <SiteHeader />
+
+  <section class="detail">
+    <div class="wrap">
+      <div class="detail__back">
+        <a class="arrow-link" href="/#services"><span class="arrow">←</span> All services</a>
+      </div>
+
+      <div class="detail__grid">
+        <div>
+          <p class="eyebrow eyebrow--accent detail__eyebrow">{service.tagLine || "Lukas — Electrician"}</p>
+          <h1 class="display detail__title">{service.name}<span class="dot">.</span></h1>
+          <p class="detail__lede">{service.description}</p>
+
+          <div class="detail__facts">
+            <div class="detail__fact">
+              <div class="k">Price</div>
+              <div class="v price">{priceLabel}</div>
+            </div>
+            <div class="detail__fact">
+              <div class="k">On-site time</div>
+              <div class="v">{durationLabel}</div>
+            </div>
+            <div class="detail__fact">
+              <div class="k">Where</div>
+              <div class="v">Your place</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <BookingWidget
+            client:only="react"
+            serviceId={service.id}
+            serviceName={service.name}
+            serviceType={service.type}
+            priceLabel={priceLabel}
+            isFree={service.isFree}
+            paymentOnline={service.paymentOnline}
+            paymentInPerson={service.paymentInPerson}
+            formId={service.formId}
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <SiteFooter />
+</Layout>

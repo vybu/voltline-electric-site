@@ -1,0 +1,29 @@
+---
+// Global site header. `overlay` renders it transparent over the hero.
+interface Props { overlay?: boolean }
+const { overlay = false } = Astro.props;
+const cls = overlay ? "site-header site-header--overlay" : "site-header site-header--solid";
+---
+<header class={cls}>
+  <div class="wrap nav-grid">
+    <a class="brand" href="/" aria-label="Lukas — electrician, home">
+      <span class="brand__mark">Lukas</span>
+      <span class="brand__sub">Electrician</span>
+    </a>
+
+    <nav class="nav-col" aria-label="Primary">
+      <a href="/#services">Services</a>
+      <a href="/journal">Journal</a>
+    </nav>
+
+    <nav class="nav-col nav-col--hideable" aria-label="Studio">
+      <a href="/#about">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+
+    <div class="header-end nav-col nav-col--hideable" aria-label="Sectors">
+      <a href="/#services">Residential</a>
+      <a href="/#services">Commercial</a>
+    </div>
+  </div>
+</header>

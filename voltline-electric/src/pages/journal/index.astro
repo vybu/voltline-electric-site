@@ -1,0 +1,61 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { listPosts, formatPostDate, type PostView } from "../../lib/blog.ts";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+// Guard the SSR read (A3): an unguarded throw would truncate the response.
+let posts: PostView[] = [];
+try {
+  posts = await listPosts(50);
+} catch (e) {
+  console.error("Failed to load journal posts", e);
+}
+---
+
+<Layout>
+  <SiteHeader />
+
+  <section class="journal-hero">
+    <div class="wrap">
+      <p class="eyebrow eyebrow--accent">The Journal</p>
+      <h1 class="display journal-hero__title">Field Notes<span class="dot">.</span></h1>
+      <p class="journal-hero__lede">
+        Plain-English write-ups from the van — what actually goes wrong in homes,
+        and how Lukas fixes it.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="notes">
+    <div class="wrap">
+      {posts.length === 0 ? (
+        <p class="bw__empty">No field notes published yet — check back soon.</p>
+      ) : (
+        <div class="notes-row">
+          {posts.map((n, i) => (
+            <a class="note" href={`/journal/${n.slug}`}>
+              <div class="note__thumb">
+                {n.coverUrl && (
+                  <img src={n.coverUrl} alt="" loading={i < 4 ? "eager" : "lazy"} decoding="async" />
+                )}
+                {n.categoryLabel && <span class="note__kicker">{n.categoryLabel}</span>}
+              </div>
+              <div class="note__title">{n.title}</div>
+              <div class="note__date">
+                {`Field Note No.${pad(posts.length - 1 - i)}`}
+                {n.firstPublishedDate ? ` · ${formatPostDate(n.firstPublishedDate)}` : ""}
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <SiteFooter />
+</Layout>
