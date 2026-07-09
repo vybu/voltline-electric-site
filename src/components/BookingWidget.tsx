@@ -304,14 +304,14 @@ export default function BookingWidget(props: Props) {
   if (loading) {
     return (
       <div className="bw">
-        <div className="bw__loading"><span className="spinner"></span>Loading availability…</div>
+        <div className="bw__loading" role="status" aria-live="polite"><span className="spinner" aria-hidden="true"></span>Loading availability…</div>
       </div>
     );
   }
 
   return (
     <div className="bw">
-      {error && <div className="bw__msg bw__msg--err">{error}</div>}
+      {error && <div className="bw__msg bw__msg--err" role="alert">{error}</div>}
 
       {phase === "pick" && (
         <>
@@ -327,8 +327,10 @@ export default function BookingWidget(props: Props) {
                 {days.map(([k]) => (
                   <button
                     key={k}
+                    type="button"
                     className="bw__day"
-                    aria-selected={activeDay === k}
+                    aria-pressed={activeDay === k}
+                    aria-label={`${dowOf(k)} ${monOf(k)} ${dnumOf(k)}`}
                     onClick={() => setActiveDay(k)}
                   >
                     <div className="dow">{dowOf(k)}</div>
@@ -341,8 +343,10 @@ export default function BookingWidget(props: Props) {
                 {daySlots.map((s, i) => (
                   <button
                     key={i}
+                    type="button"
                     className="bw__slot"
-                    aria-selected={picked === s}
+                    aria-pressed={picked === s}
+                    aria-label={`Book ${timeOf(s.localStartDate)}`}
                     onClick={() => {
                       setPicked(s);
                       setPhase("details");
@@ -359,7 +363,7 @@ export default function BookingWidget(props: Props) {
 
       {(phase === "details" || phase === "submitting") && picked && (
         <>
-          <button className="bw__back" onClick={() => setPhase("pick")} disabled={phase === "submitting"}>
+          <button type="button" className="bw__back" onClick={() => setPhase("pick")} disabled={phase === "submitting"}>
             ← Change time
           </button>
           <div className="bw__step-label">Step 2 · Your details</div>
@@ -427,7 +431,7 @@ export default function BookingWidget(props: Props) {
 
             <button className="btn bw__full" type="submit" disabled={phase === "submitting"}>
               {phase === "submitting" ? (
-                <><span className="spinner"></span>Booking…</>
+                <><span className="spinner" aria-hidden="true"></span>Booking…</>
               ) : (
                 <>Confirm booking <span className="arrow">→</span></>
               )}

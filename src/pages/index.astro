@@ -41,6 +41,8 @@ const serviceImages: Record<string, string> = {
 ---
 
 <Layout>
+  <SiteHeader overlay />
+  <main id="main" tabindex="-1">
   <!-- HERO — full-bleed image of Lukas with his kit, on warm terracotta. -->
   <section class="hero" id="top">
     <div class="hero__bg">
@@ -96,8 +98,6 @@ const serviceImages: Record<string, string> = {
     </div>
     <div class="hero__scrim" aria-hidden="true"></div>
 
-    <SiteHeader overlay />
-
     <div class="hero__content">
       <h1 class="hero__title">
         An electrician homes<br />can actually count on<span class="dot">.</span>
@@ -111,7 +111,7 @@ const serviceImages: Record<string, string> = {
     <div class="wrap">
       <div class="band-head">
         <p class="eyebrow">Service Index</p>
-        <p class="eyebrow mid">What Lukas does</p>
+        <h2 class="eyebrow mid">What Lukas does</h2>
         <p class="eyebrow end">Fully insured · Since 2016</p>
       </div>
     </div>
@@ -144,7 +144,7 @@ const serviceImages: Record<string, string> = {
                   <span class="svc-card__tag">{s.tagLine}</span>
                 </div>
                 <div class="svc-card__foot">
-                  <span class="svc-card__name">{s.name}</span>
+                  <h3 class="svc-card__name">{s.name}</h3>
                   <span class="svc-card__meta">
                     <span class="svc-card__price">{formatPrice(s)}</span><br />
                     <span class="svc-card__dur">{formatDuration(s.durationMinutes)}</span>
@@ -174,7 +174,7 @@ const serviceImages: Record<string, string> = {
       <div class="wrap">
         <div class="band-head">
           <p class="eyebrow">Field Notes Index</p>
-          <p class="eyebrow mid">Journal</p>
+          <h2 class="eyebrow mid">Journal</h2>
           <a class="eyebrow end arrow-link" href="/journal">All notes <span class="arrow">→</span></a>
         </div>
         <div class="notes-row">
@@ -198,5 +198,6 @@ const serviceImages: Record<string, string> = {
     </section>
   )}
 
+  </main>
   <SiteFooter />
 </Layout>
