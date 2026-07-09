@@ -441,32 +441,38 @@ img { display: block; max-width: 100%; }
 /* ============================================================
    BOOKING WIDGET (island)
    ============================================================ */
-/* Reserve the widget's height so nothing shifts when the client:only island
-   hydrates and the availability calendar replaces the loading state. The
-   wrapper holds space before hydration (when .bw does not exist yet); .bw
-   holds it during the loading → calendar transition. */
-.booking-col { min-height: 300px; }
-.bw { border: 1px solid var(--line); border-radius: 16px; background: var(--ink-1); padding: clamp(22px, 3vw, 34px); min-height: 300px; }
-@media (max-width: 880px) { .booking-col, .bw { min-height: 230px; } }
-.bw__step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+/* Reserve the widget's height (matched to the taller "details" form) so the
+   card never resizes: not when the client:only island hydrates, not when the
+   loading state becomes the calendar, and not when Step 1 → Step 2. The
+   booking-col wrapper holds the space before .bw exists (pre-hydration). */
+.booking-col { min-height: 600px; }
+.bw { border: 1px solid var(--line); border-radius: 16px; background: var(--ink-1); padding: clamp(22px, 3vw, 34px); min-height: 600px; }
+/* The picker has less content than the form, so center it vertically to fill
+   the reserved height as a balanced card instead of leaving a bottom gap. */
+.bw--pick, .bw--loading { display: flex; flex-direction: column; justify-content: center; }
+.bw__step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 22px; }
 .bw__h { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0 0 20px; }
 
-.bw__days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; scrollbar-width: thin; }
+/* Days as a wrapping grid (was a horizontal scroll strip): every available
+   date is visible at once, and the two-ish rows help fill the reserved height.
+   max-height caps it at ~2 rows and scrolls beyond, so the picker's height
+   stays predictable no matter how many days have availability. */
+.bw__days { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 10px; margin-bottom: 26px; max-height: 200px; overflow-y: auto; scrollbar-width: thin; }
 .bw__day {
-  flex: 0 0 auto; min-width: 66px; text-align: center; cursor: pointer;
-  border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; background: transparent;
+  text-align: center; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 14px; padding: 15px 12px; background: transparent;
   color: var(--paper); transition: all 0.15s ease; font-family: var(--font-ui);
 }
 .bw__day:hover { border-color: var(--line-strong); }
 .bw__day[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-.bw__day .dow { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; }
-.bw__day .dnum { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.1; }
-.bw__day .mon { font-size: 10px; opacity: 0.7; }
+.bw__day .dow { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; margin-bottom: 6px; }
+.bw__day .dnum { font-family: var(--font-display); font-weight: 700; font-size: 27px; line-height: 1.05; }
+.bw__day .mon { font-size: 11px; opacity: 0.7; margin-top: 4px; }
 
-.bw__slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+.bw__slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
 .bw__slot {
-  border: 1px solid var(--line); border-radius: 9px; padding: 12px 8px; background: transparent; color: var(--paper);
-  font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.15s ease; font-family: var(--font-ui);
+  border: 1px solid var(--line); border-radius: 12px; padding: 18px 10px; background: transparent; color: var(--paper);
+  font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.15s ease; font-family: var(--font-ui);
 }
 .bw__slot:hover { border-color: var(--accent); color: var(--accent); }
 .bw__slot[aria-pressed="true"] { background: var(--accent); color: var(--paper); border-color: transparent; }

@@ -303,14 +303,14 @@ export default function BookingWidget(props: Props) {
 
   if (loading) {
     return (
-      <div className="bw">
+      <div className="bw bw--loading">
         <div className="bw__loading" role="status" aria-live="polite"><span className="spinner" aria-hidden="true"></span>Loading availability…</div>
       </div>
     );
   }
 
   return (
-    <div className="bw">
+    <div className={`bw bw--${phase}`}>
       {error && <div className="bw__msg bw__msg--err" role="alert">{error}</div>}
 
       {phase === "pick" && (
