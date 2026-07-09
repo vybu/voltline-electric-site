@@ -424,7 +424,11 @@ img { display: block; max-width: 100%; }
    ============================================================ */
 .detail { padding: clamp(56px, 9vw, 128px) 0 clamp(72px, 10vh, 140px); }
 .detail__back { margin-bottom: 52px; }
-.detail__grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(40px, 7vw, 110px); align-items: start; }
+/* minmax(0, …) clamps each track's minimum to 0 so the columns stay strictly
+   proportional. Without it, the bare fr tracks size to min-content, and the
+   booking widget growing from "Loading…" to the full calendar widens the right
+   column and reflows the title on the left (layout shift on load). */
+.detail__grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(40px, 7vw, 110px); align-items: start; }
 .detail__eyebrow { margin-bottom: 22px; }
 .detail__title { font-size: clamp(40px, 6vw, 92px); max-width: 12ch; }
 .detail__lede { color: var(--muted); font-size: clamp(16px, 1.5vw, 20px); line-height: 1.6; max-width: 52ch; margin-top: 30px; }
@@ -437,7 +441,13 @@ img { display: block; max-width: 100%; }
 /* ============================================================
    BOOKING WIDGET (island)
    ============================================================ */
-.bw { border: 1px solid var(--line); border-radius: 16px; background: var(--ink-1); padding: clamp(22px, 3vw, 34px); }
+/* Reserve the widget's height so nothing shifts when the client:only island
+   hydrates and the availability calendar replaces the loading state. The
+   wrapper holds space before hydration (when .bw does not exist yet); .bw
+   holds it during the loading → calendar transition. */
+.booking-col { min-height: 300px; }
+.bw { border: 1px solid var(--line); border-radius: 16px; background: var(--ink-1); padding: clamp(22px, 3vw, 34px); min-height: 300px; }
+@media (max-width: 880px) { .booking-col, .bw { min-height: 230px; } }
 .bw__step-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
 .bw__h { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0 0 20px; }
 
