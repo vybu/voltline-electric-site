@@ -1,4 +1,4 @@
-# Voltline Electric
+# Lukas Electric
 
 A booking website for an electrical-services company, built on **Wix Headless**
 (Astro + Wix SDK, hosted on Wix). Visitors browse services and book a home visit
